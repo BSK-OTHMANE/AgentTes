@@ -252,14 +252,18 @@ def search_node(state: ResearchState) -> ResearchState:
     for task in state.get("sub_tasks", []):
         print(f"  → {task}")
         results = search_tool.invoke({"query": task})
-        if isinstance(results, str):
-            new_snippets.append(results)
-            continue
-        for r in results:
+        # NEW Tavily backend returns dict
+        if isinstance(results, dict):
+            results_list = results.get("results", [])
+        else:
+            results_list = results
+
+        for r in results_list:
             if isinstance(r, dict):
-                snippet = f"[{r.get('url', r.get('source', ''))}]\n{r.get('content', r.get('text', str(r)))}"
+                snippet = f"[{r.get('url','')}]\n{r.get('content','')}"
             else:
                 snippet = str(r)
+
             new_snippets.append(snippet)
 
     cumulative = state.get("search_results", []) + new_snippets
@@ -456,5 +460,5 @@ def run(query: str) -> str:
 if __name__ == "__main__":
     import sys
     query = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else \
-        "What are the latest breakthroughs in quantum computing in 2024?"
+        "give me the latest update on the iran usa war"
     run(query)
